@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Starbucks Order Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f9f9f9;
+      padding-top: 71px; /* Added padding to prevent content from being hidden behind fixed header */
+    }
+    
+    /* --- NAVBAR --- */
+    .navbar {
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 30px;
+      border-bottom: 1px solid #eee;
+      position: fixed; /* Make header fixed */
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000; /* Ensure it stays on top */
+    }
+    .navbar .logo {
+      height: 50px;
+    }
+    .navbar nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+    }
+    .navbar nav a.active {
+      color: #006241;
+      border-bottom: 2px solid #006241;
+    }
+    .search-user {
+      display: flex;
+      align-items: center;
+    }
+    .search-user input {
+      padding: 8px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+    .user-icon {
+      font-size: 22px;
+      margin-right: 15px;
+    }
+    .cart-icon {
+      font-size: 22px;
+      cursor: pointer;
+      position: relative;
+    }
+    .cart-count {
+      background: #00754a;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 7px;
+      position: absolute;
+      top: -8px;
+      right: -10px;
+    }
+
+    /* cart panel - MODIFIED TO APPEAR ON THE RIGHT SIDE */
+    .cart-panel {
+      position: fixed;
+      top: 71px; /* Position below the header */
+      right: -400px; /* Start off-screen to the right */
+      width: 350px;
+      height: calc(100vh - 71px);
+      background: white;
+      box-shadow: -4px 0 8px rgba(0,0,0,0.2);
+      transition: right 0.3s ease;
+      padding: 20px;
+      z-index: 1001; /* Higher than header */
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .cart-panel.active {
+      right: 0; /* Slide in from right */
+    }
+    .cart-panel h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .cart-item-details {
+      flex: 1;
+    }
+    .cart-item-name {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .cart-item-price {
+      font-size: 14px;
+      color: #00754a;
+      font-weight: 600;
+    }
+    .cart-item-total {
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .quantity-btn {
+      background: #f1f1f1;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .quantity-btn:hover {
+      background: #e0e0e0;
+    }
+    .quantity-value {
+      font-size: 14px;
+      font-weight: 500;
+      min-width: 20px;
+      text-align: center;
+    }
+    .remove-btn {
+      background: #d63c3c;
+      color: white;
+      border: none;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .cart-summary {
+      border-top: 2px solid #eee;
+      padding-top: 15px;
+      margin-top: 10px;
+    }
+    .cart-subtotal {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .checkout-btn {
+      background: #00754a;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    /* Overlay for when cart is open */
+    .cart-overlay {
+      position: fixed;
+      top: 71px;
+      left: 0;
+      width: 100%;
+      height: calc(100vh - 71px);
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+    }
+    .cart-overlay.active {
+      display: block;
+    }
+
+    /* --- LOCATION BAR --- */
+    .location-bar {
+      background: #1e3932;
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 0;
+    }
+    .location-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    .dine-toggle {
+      display: flex;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .dine-toggle button {
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: bold;
+      background: white;
+      color: #006241;
+    }
+    .dine-toggle button.active {
+      background: #1e3932;
+      color: white;
+    }
+
+    /* --- ALERT --- */
+    .alert-box {
+      margin-top: 15px;
+      background-color: #fce8e6;
+      border-radius: 8px;
+      padding: 16px;
+      color: #b00020;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      max-width: 400px;
+    }
+    .alert-box span {
+      font-weight: normal;
+      color: #333;
+    }
+
+    /* --- NOTIFICATION TOAST --- */
+    .notification-toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #00754a;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(100px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .notification-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .notification-toast .checkmark {
+      font-size: 18px;
+    }
+
+    /* --- MAIN TABS --- */
+    .main-tabs {
+      display: flex;
+      justify-content: space-around;
+      background-color: #f3f1ec;
+      padding: 16px 0 0;
+      font-size: 15px;
+      border-bottom: 3px solid #ddd;
+      width: 100%;
+    }
+    .main-tabs a {
+      text-decoration: none;
+      flex: 1;
+      text-align: center;
+    }
+    .main-tabs .tab {
+      color: #444;
+      padding: 10px 5px;
+      position: relative;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+    .main-tabs .tab.active {
+      color: #00754a;
+      font-weight: 600;
+    }
+    .main-tabs .tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      background-color: #00754a;
+      border-radius: 2px;
+    }
+
+    /* --- SUB-TABS --- */
+    .sub-tabs {
+      display: flex;
+      width: 100%;         
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      margin: 16px 0;
+      padding: 8px 0;
+    }
+    .sub-tabs .tab {
+      flex: 1;               
+      text-align: center;
+      padding: 12px 0;
+      font-size: 15px;
+      color: #444;
+      cursor: pointer;
+    }
+    .sub-tabs .tab.active {
+      color: #00754a;
+      font-weight: 600;
+      border-bottom: 2px solid #00754a;
+    }
+
+    /* --- FILTERS --- */
+    .filters-container {
+      position: relative;
+    }
+    .filters {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 12px 24px;
+      gap: 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      background-color: #fff;
+    }
+    .filter-icon {
+      font-size: 16px;
+      color: #444;
+      cursor: pointer;
+    }
+    .pill {
+      background-color: #e0e0e0;
+      padding: 6px 14px;
+      border-radius: 16px; /* Fixed Cyrillic text issue */
+      font-size: 13px;
+      color: #444;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .filters::-webkit-scrollbar {
+      height: 6px;
+    }
+    .filters::-webkit-scrollbar-thumb {
+      background: #006241;
+      border-radius: 10px;
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator-wrapper {
+      position: relative;
+      height: 6px;
+      background-color: #e0e0e0;
+      margin: 0 24px;
+    }
+    .scroll-indicator {
+      height: 6px;
+      background-color: #00754a;
+      border-radius: 4px;
+      width: 90%;
+      margin-left: 16px;
+    }
+
+    /* --- PRODUCT SECTION --- */
+    .section-title {
+      margin-bottom: 5px;
+      font-size: 22px;
+      font-weight: 600;
+      padding: 20px 40px 0;
+    }
+    .section-description {
+      margin-bottom: 30px;
+      font-size: 15px;
+      color: #555;
+      padding: 0 40px;
+    }
+    .card-container {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      padding: 0 40px 40px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card-header {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    .card-header img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .card-header-content {
+      flex: 1;
+    }
+    .veg-icon {
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid green;
+      border-radius: 3px;
+      display: inline-block;
+      position: relative;
+      top: 2px;
+      margin-right: 4px;
+    }
+    .veg-icon::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: green;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+    }
+    .item-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .item-subtext {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+    .item-desc {
+      font-size: 14px;
+      color: #333;
+      min-height: 34px;
+    }
+    .price-row {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .price {
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .add-btn {
+      background-color: #00754a;
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s;
+    }
+    .add-btn:hover {
+      background-color: #005a38;
+    }
+    .badge-new {
+      background-color: #e6f4ec;
+      color: #00754a;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    /* --- FRIENDS PARTY PROMOTION --- */
+    .friends-party {
+      background-color: #00754a;
+      color: white;
+      padding: 40px;
+      text-align: center;
+      margin: 40px 0 0;
+    }
+    .friends-party h2 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+    .friends-party p {
+      font-size: 18px;
+      max-width: 800px;
+      margin: 0 auto 25px;
+      line-height: 1.6;
+    }
+    .party-cta {
+      background-color: white;
+      color: #00754a;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .party-cta:hover {
+      background-color: #f1f1f1;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <img class="logo" src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d3/Starbucks_Corporation_Logo_2011.svg/768px-Starbucks_Corporation_Logo_2011.svg.png" alt="Starbucks Logo">
+    <nav>
+      <a href="Starbucks.html">Home</a>
+      <a href="gift.html">Gift</a>
+      <a href="Order.html">Order</a>
+      <a href="Payment.html">Pay</a>
+      <a href="Store.html">Store</a>
+    </nav>
+    <div class="search-user">
+      <input type="text" placeholder="Looking for something specific?">
+      <div class="user-icon">👤</div>
+      <div class="cart-icon"> 🛒 <span class="cart-count">0</span> </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div class="notification-toast" id="notificationToast">
+    <span class="checkmark">✓</span>
+    <span id="notificationMessage">Item added to cart!</span>
+  </div>
+
+  <!-- Cart Overlay -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <!-- Cart Panel - MODIFIED TO APPEAR ON THE RIGHT SIDE -->
+  <div class="cart-panel" id="cartPanel">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="backBtn" style="cursor:pointer;font-size:20px;">&#8592;</span>
+      <h2 style="margin:0;">Your Cart</h2>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-summary">
+      <div class="cart-subtotal">
+        <span>Subtotal:</span>
+        <span id="cartSubtotal">₹ 0.00</span>
+      </div>
+       <a href="Payment.html">
+      <button class="checkout-btn">Proceed to Checkout</button></a>
+    </div>
+  </div>
+
+  <!-- LOCATION SECTION -->
+  <section class="location-bar">
+    <div>
+      <div class="location-info">📍 No Store Selected &nbsp;|&nbsp; ⏱ 00 mins</div>
+      <div class="alert-box">
+        <span style="color:#d63c3c;font-weight:700;">No store found!</span>
+        <span>Please enter a different location to find the nearest Starbucks.</span>
+      </div>
+    </div>
+    <div class="dine-toggle">
+      <button class="active">Dine-In</button>
+      <button>Takeaway</button>
+    </div>
+  </section>
+
+  <!-- Main Navigation Tabs -->
+  <div class="main-tabs">
+     <a href="Bestseller.html">
+    <div class="tab">Bestseller</div>
+    </a>
+     <a href="Drinks.html">
+    <div class="tab">Drinks</div>
+    </a>
+     <a href="food.html">
+    <div class="tab">Food</div>
+    </a>
+     <a href="Merchandise.html">
+    <div class="tab">Merchandise</div>
+    </a>
+     <a href="Coffee At Home.html">
+    <div class="tab">Coffee At Home</div>
+    </a>
+    <div class="tab active">Ready to Eat</div>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filters-container">
+    <div class="filters">
+      <div class="filter-icon">☰</div>
+      <div class="pill">Chocolate</div>
+      <div class="pill">Mints</div>
+      <div class="pill">Nuts</div>
+    </div>
+    <div class="scroll-indicator-wrapper">
+      <div class="scroll-indicator"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Quick Bites</div>
+  <div class="section-description">
+Starbucks snacks available on the go.
+  </div>
+
+  <div class="card-container">
+
+    <!-- Card 1 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/117080.png" alt="Malabar Spice Choco Barks">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Malabar Spice Choco Barks</span></div>
+          <div class="item-subtext">Serving size: 25g Calories per serving: 137.8kcal</div>
+          <div class="item-desc">Experience the perfect blend of Bombay Sweet Shop's iconic c..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 395.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116807.png" alt="Almond Biscotti - 50g">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Almond Biscotti - 50g</span></div>
+          <div class="item-subtext">Kcal - 102 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 102 per serve Serving Size - 25g (Net weight - 50g) ..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 180.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116811.png" alt="Hazelnut Cinnamon Chocolate Bites -50Gm">
+        <div class="card-header-content">
+          <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Hazelnut Cinnamon Chocolate Bites -50Gm</span></div>
+          <div class="item-subtext">Kcal - 147 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 147 per serve Serving Size - 25g (Net weight - 50g) A..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 195.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+        <!-- Card 4 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116882.png" alt="Roasted & Salted Almond 50 gms">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Roasted & Salted Almond 50 gms</span></div>
+          <div class="item-subtext">Kcal - 158 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 158 per serve Serving Size - 25g (Net weight - 50g) A..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 190.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+        <!-- Card 5 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116810.png" alt="Salted Almond Chocolate Bites -50Gm">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Salted Almond Chocolate Bites -50Gm</span></div>
+          <div class="item-subtext">Kcal - 146 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 146 per serve Serving Size - 25g (Net weight - 50g) A..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 190.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+     <!-- Card 6 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116883.png" alt="Roasted & Salted Cashew 50 gms">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Roasted & Salted Cashew 50 gms</span></div>
+          <div class="item-subtext">Kcal - 152 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 152 per serve Serving Size - 25g (Net weight - 50g) A..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 190.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 7 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116807.png" alt="Almond Biscotti - 50g">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Almond Biscotti - 50g</span></div>
+          <div class="item-subtext">Kcal - 102 per serve Serving Size - 25g (Net weight - 50g)</div>
+          <div class="item-desc">Kcal - 102 per serve Serving Size - 25g (Net weight - 50g) .</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 180.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 8 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116808.png" alt="Cranberry Biscotti -50g">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Cranberry Biscotti -50g</span></div>
+          <div class="item-subtext">Kcal - 86 per serve Serving Size - 25g (Net weight - 50g</div>
+          <div class="item-desc">Kcal - 86 per serve Serving Size - 25g (Net weight - 50g) Al..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 180.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Friends Party Promotion -->
+  <div class="friends-party">
+    <h2>Celebrate Good Times with Friends!</h2>
+    <p>Gather your favorite people and make memories over delicious Starbucks treats. Our party platters and group ordering make it easy to share the joy with everyone you care about.</p>
+  </div>
+  
+  <script>
+    const cart = [];
+    const cartIcon = document.querySelector(".cart-icon");
+    const cartCount = document.querySelector(".cart-count");
+    const cartPanel = document.getElementById("cartPanel");
+    const cartItemsContainer = document.getElementById("cartItems");
+    const cartSubtotal = document.getElementById("cartSubtotal");
+    const backBtn = document.getElementById("backBtn");
+    const notificationToast = document.getElementById("notificationToast");
+    const notificationMessage = document.getElementById("notificationMessage");
+    const cartOverlay = document.getElementById("cartOverlay");
+
+    // Function to parse price string to number
+    function parsePrice(priceStr) {
+      return parseFloat(priceStr.replace('₹', '').replace(',', '').trim());
+    }
+
+    // Function to format number as price
+    function formatPrice(amount) {
+      return '₹ ' + amount.toFixed(2);
+    }
+
+    // Function to calculate item total (price * quantity)
+    function calculateItemTotal(item) {
+      const price = parsePrice(item.price);
+      return price * item.quantity;
+    }
+
+    // Function to calculate cart subtotal
+    function calculateCartSubtotal() {
+      return cart.reduce((total, item) => total + calculateItemTotal(item), 0);
+    }
+
+    // Function to show notification
+    function showNotification(message) {
+      notificationMessage.textContent = message;
+      notificationToast.classList.add("show");
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        notificationToast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Function to open cart
+    function openCart() {
+      cartPanel.classList.add("active");
+      cartOverlay.classList.add("active");
+      document.body.style.overflow = 'hidden'; // Prevent scrolling when cart is open
+    }
+
+    // Function to close cart
+    function closeCart() {
+      cartPanel.classList.remove("active");
+      cartOverlay.classList.remove("active");
+      document.body.style.overflow = ''; // Re-enable scrolling
+    }
+
+    // open cart
+    cartIcon.addEventListener("click", openCart);
+
+    // back button closes cart
+    backBtn.addEventListener("click", closeCart);
+
+    // Close cart when clicking outside
+    cartOverlay.addEventListener("click", closeCart);
+
+    // Prevent cart from closing when clicking inside it
+    cartPanel.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    // Add to cart functionality
+    document.querySelectorAll(".add-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const card = e.target.closest(".card");
+        const itemName = card.querySelector(".item-name").textContent;
+        const itemPrice = card.querySelector(".price").textContent;
+        const itemImage = card.querySelector("img").src;
+        
+        // Check if item already exists in cart
+        const existingItemIndex = cart.findIndex(item => item.name === itemName);
+        
+        if (existingItemIndex >= 0) {
+          // Increment quantity if item already exists
+          cart[existingItemIndex].quantity += 1;
+          showNotification(`${itemName} quantity updated!`);
+        } else {
+          // Add new item to cart with quantity 1
+          cart.push({ 
+            name: itemName, 
+            price: itemPrice, 
+            image: itemImage,
+            quantity: 1 
+          });
+          showNotification(`${itemName} added to cart!`);
+        }
+        
+        updateCart();
+        
+        // Add a quick animation to the button
+        e.target.textContent = "✓ Added";
+        e.target.style.backgroundColor = "#005a38";
+        setTimeout(() => {
+          e.target.textContent = "Add Item";
+          e.target.style.backgroundColor = "#00754a";
+        }, 1000);
+      });
+    });
+
+    // update cart
+    function updateCart() {
+      cartItemsContainer.innerHTML = "";
+      
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p style="text-align:center;padding:20px;">Your cart is empty</p>';
+        cartCount.textContent = "0";
+        cartSubtotal.textContent = formatPrice(0);
+        return;
+      }
+      
+      let totalItems = 0;
+      
+      cart.forEach((item, i) => {
+        totalItems += item.quantity;
+        const itemTotal = calculateItemTotal(item);
+        
+        const div = document.createElement("div");
+        div.classList.add("cart-item");
+        div.innerHTML = `
+          <img src="${item.image}" alt="${item.name}" style="width:50px;height:50px;border-radius:8px;object-fit:cover;">
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">${item.price} × ${item.quantity}</div>
+            <div class="cart-item-total">${formatPrice(itemTotal)}</div>
+            <div class="quantity-controls">
+              <button class="quantity-btn decrement-btn" data-index="${i}">-</button>
+              <span class="quantity-value">${item.quantity}</span>
+              <button class="quantity-btn increment-btn" data-index="${i}">+</button>
+            </div>
+          </div>
+          <button class="remove-btn" data-index="${i}">✕</button>
+        `;
+        cartItemsContainer.appendChild(div);
+      });
+      
+      // Update cart count and subtotal
+      cartCount.textContent = totalItems;
+      cartSubtotal.textContent = formatPrice(calculateCartSubtotal());
+
+      // Add event listeners for increment buttons
+      document.querySelectorAll(".increment-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const idx = e.target.getAttribute("data-index");
+          cart[idx].quantity += 1;
+          updateCart();
+          showNotification(`${cart[idx].name} quantity updated!`);
+        });
+      });
+
+      // Add event listeners for decrement buttons
+      document.querySelectorAll(".decrement-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const idx = e.target.getAttribute("data-index");
+          if (cart[idx].quantity > 1) {
+            cart[idx].quantity -= 1;
+            updateCart();
+            showNotification(`${cart[idx].name} quantity updated!`);
+          } else {
+            // If quantity is 1, remove the item
+            const removedItem = cart[idx].name;
+            cart.splice(idx, 1);
+            updateCart();
+            showNotification(`${removedItem} removed from cart!`);
+          }
+        });
+      });
+
+      // remove item
+      document.querySelectorAll(".remove-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation(); // Prevent event from bubbling to parent elements
+          const idx = e.target.getAttribute("data-index");
+          const removedItem = cart[idx].name;
+          cart.splice(idx, 1);
+          updateCart();
+          showNotification(`${removedItem} removed from cart!`);
+        });
+      });
+    }
+
+
+
+
+
+    // Function to save cart to localStorage
+function saveCartToStorage() {
+  try {
+    localStorage.setItem('starbucksCart', JSON.stringify(cart));
+    return true;
+  } catch (e) {
+    console.error('Error saving cart to localStorage:', e);
+    return false;
+  }
+}
+
+// Function to get cart from localStorage
+function getCartFromStorage() {
+  try {
+    return JSON.parse(localStorage.getItem('starbucksCart')) || [];
+  } catch (e) {
+    console.error('Error reading cart from localStorage:', e);
+    return [];
+  }
+}
+
+// Modify the checkout button functionality
+document.querySelector('.checkout-btn').addEventListener('click', function(e) {
+  // Check if cart is empty
+  if (cart.length === 0) {
+    e.preventDefault(); // Prevent navigation
+    alert('Your cart is empty!');
+    return;
+  }
+  
+  // Save cart to localStorage before navigating
+  if (!saveCartToStorage()) {
+    e.preventDefault();
+    alert('Error saving cart data. Please try again.');
+    return;
+  }
+  
+  // Allow navigation to proceed
+  // The href on the anchor tag will handle the rest
+});
+
+// Also update the add-to-cart functionality to include more item details
+document.querySelectorAll(".add-to-cart").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    const itemName = card.querySelector("h3").textContent;
+    const itemPrice = parseFloat(card.querySelector(".price").textContent.replace('₹ ', '').replace(',', ''));
+    const itemImage = card.querySelector("img").src;
+    const itemDescription = card.querySelector("p") ? card.querySelector("p").textContent : '';
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(item => item.name === itemName);
+    
+    if (existingItemIndex !== -1) {
+      // If exists, increase quantity
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      // If new, add to cart with quantity 1
+      cart.push({ 
+        name: itemName, 
+        price: itemPrice,
+        image: itemImage,
+        description: itemDescription,
+        quantity: 1
+      });
+    }
+    
+    updateCart();
+    showSuccessMessage();
+  });
+});
+
+
+
+
+
+
+
+
+
+
+  </script>
+</body>
+</html>

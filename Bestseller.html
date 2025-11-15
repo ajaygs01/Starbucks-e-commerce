@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starbucks Order Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      color: #333;
+      padding-top: 70px; /* Account for fixed header */
+    }
+    
+    /* Fixed Header */
+    header {
+      background: #ffffff;
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    header img {
+      height: 30px;
+    }
+    
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      transition: color 0.2s;
+      position: relative;
+    }
+    
+    nav a:hover {
+      color: #00754a;
+    }
+    
+    /* Add underline for active navigation item */
+    nav a.active {
+      color: #00754a;
+    }
+    
+    nav a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: #00754a;
+      border-radius: 2px;
+    }
+
+    /* Cart icon */
+    .cart-icon {
+      font-size: 22px;
+      cursor: pointer;
+      position: relative;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    
+    .cart-icon:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .cart-count {
+      background: #00754a;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 7px;
+      position: absolute;
+      top: -8px;
+      right: -10px;
+    }
+
+    /* Cart panel - positioned above header */
+    .cart-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 350px;
+      height: 100vh;
+      background: white;
+      box-shadow: -2px 0 15px rgba(0,0,0,0.2);
+      transition: right 0.3s ease;
+      padding: 20px;
+      z-index: 1000; /* Higher than header */
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .cart-panel.active {
+      right: 0;
+    }
+    
+    .cart-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cart-header h2 {
+      margin: 0;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .back-btn {
+      cursor: pointer;
+      font-size: 20px;
+      margin-right: 10px;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    
+    .back-btn:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cart-item img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+    
+    .cart-item-info {
+      flex: 1;
+    }
+    
+    .cart-item-name {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .cart-item-price {
+      color: #00754a;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    
+    .cart-item-total {
+      color: #00754a;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .cart-item-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    
+    .quantity-btn {
+      background: #f1f1f1;
+      border: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .remove-btn {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .cart-total {
+      padding: 15px 0;
+      font-weight: bold;
+      border-top: 2px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      font-size: 18px;
+    }
+    
+    .checkout-btn {
+      background: #00754a;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    
+    .checkout-btn:hover {
+      background: #005a38;
+    }
+    
+    .empty-cart {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+    }
+
+    .breadcrumb {
+      padding: 16px 0 8px 30px;
+      font-size: 17px;
+      background: #fff;
+      color: #333;
+      font-weight: 400;
+      margin-top: 10px;
+    }
+    
+    .header-area {
+      background: #224036;
+      color: #fff;
+      padding: 20px 22px 10px 22px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+      min-height: 120px;
+    }
+    
+    .location-section {
+      width: 60%;
+    }
+    
+    .location-details {
+      display: flex;
+      align-items: center;
+      margin-bottom: 11px;
+      gap: 14px;
+    }
+    
+    .location-icon {
+      font-size: 18px;
+    }
+    
+    .store-text {
+      font-size: 15px;
+      border-bottom: 1.5px solid #b6b6b6;
+      padding-bottom: 3px;
+      margin-right: 8px;
+      color: #e9e9e9;
+      min-width: 120px;
+    }
+    
+    .minutes {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      margin-left: 10px;
+    }
+    
+    .minutes-icon {
+      font-size: 15px;
+      margin-right: 2px;
+    }
+    
+    .alert {
+      background: #fad9db;
+      color: #d63c3c;
+      border-radius: 8px;
+      padding: 13px 16px 9px 13px;
+      margin-top: 3px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      max-width: 285px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .alert-icon {
+      font-size: 19px;
+      margin-right: 1px;
+      margin-top: 1px;
+    }
+    
+    .alert-msg {
+      color: #333;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.4;
+      margin-top: 1px;
+    }
+    
+    .alert-close {
+      margin-left: 10px;
+      color: #b45a5a;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .toggle {
+      display: flex;
+      border-radius: 7px;
+      box-shadow: 0 0 0 1px #b6b6b6;
+      overflow: hidden;
+      min-width: 190px;
+      margin-top: 1px;
+    }
+    
+    .toggle button {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 19px;
+      border: none;
+      background: #224036;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      outline: none;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    
+    .toggle button.active {
+      background: #fff;
+      color: #224036;
+    }
+    
+    /* Updated Tabs Section */
+    .tabs {
+      background: #f4f4f4;
+      padding: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      border-bottom: 1px solid #ccc;
+      width: 100%;
+    }
+    
+    .tabs a {
+      text-decoration: none;
+      color: #333;
+      padding: 5px 10px;
+      position: relative;
+    }
+    
+    .tabs a.active {
+      color: #00754a;
+      font-weight: bold;
+    }
+    
+    .tabs a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: #00754a;
+      border-radius: 2px;
+    }
+    
+    .bestseller-section {
+      padding: 30px;
+      background: #fff;
+      margin: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .bestseller-section h2 {
+      margin-bottom: 5px;
+      color: #224036;
+    }
+    
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+    
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    
+    .card h3 {
+      margin: 5px 0px;
+      font-size: 18px;
+      color: #224036;
+    }
+    
+    .card p {
+      color: #555;
+      font-size: 14px;
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+    
+    .card .price {
+      font-weight: bold;
+      margin: 10px 0;
+      color: #00754a;
+      font-size: 16px;
+    }
+    
+    .card button {
+      background: #00754a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      width: fit-content;
+      transition: background-color 0.2s;
+    }
+    
+    .card button:hover {
+      background: #005a38;
+    }
+    
+    /* Overlay when cart is open */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999; /* Below cart but above everything else */
+      display: none;
+    }
+    
+    .overlay.active {
+      display: block;
+    }
+    
+    /* Added animation for cart count */
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    
+    .cart-count.pop {
+      animation: pop 0.3s ease;
+    }
+    
+    /* Added success message */
+    .add-to-cart-success {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00754a;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    
+    .add-to-cart-success.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    /* Add this new style for the quote section */
+    .quote-section {
+      background: #1e3932;
+      color: white;
+      text-align: center;
+      padding: 40px 30px;
+      margin: 30px 20px;
+      border-radius: 10px;
+    }
+    
+    .quote-text {
+      font-style: italic;
+      font-size: 24px;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      line-height: 1.4;
+    }
+    
+    .quote-author {
+      font-size: 16px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d3/Starbucks_Corporation_Logo_2011.svg/1024px-Starbucks_Corporation_Logo_2011.svg.png" alt="Starbucks Logo">
+  <nav>
+    <a href="Starbucks.html">Home</a>
+    <a href="gift.html">Gift</a>
+    <a href="Order.html">Order</a>
+    <a href="Payment.html">Pay</a>
+    <a href="Store.html">Store</a>
+  </nav>
+  <!-- cart icon -->
+  <div class="cart-icon"> 🛒 <span class="cart-count">0</span> </div>
+</header>
+
+<!-- Overlay for when cart is open -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Success message -->
+<div class="add-to-cart-success" id="successMessage">
+  <span>Item added to cart!</span>
+</div>
+
+<div class="breadcrumb">Home &gt; Order</div>
+<div class="header-area">
+  <div class="location-section">
+    <div class="location-details">
+      <span class="location-icon">&#128205;</span>
+      <span class="store-text">No Store Selected</span>
+      <span class="minutes">
+        <span class="minutes-icon">&#128337;</span>
+        00 mins
+      </span>
+    </div>
+    <div class="alert">
+      <span class="alert-icon">&#128269;</span>
+      <div>
+        <span style="color:#d63c3c;font-weight:700;">No store found!</span>
+        <div class="alert-msg">
+          Please enter a different location to find the nearest Starbucks.
+        </div>
+      </div>
+      <span class="alert-close">&times;</span>
+    </div>
+  </div>
+  <div class="toggle">
+    <button>
+      <span style="font-size:13px">&#128101;</span> Dine-In
+    </button>
+    <button class="active">
+      <span style="font-size:13px">&#128717;</span> Takeaway
+    </button>
+  </div>
+</div>
+
+<div class="tabs">
+  <a href="#" class="active">Bestseller</a>
+  <a href="Drinks.html">Drinks</a>
+  <a href="food.html">Food</a>
+  <a href="Merchandise.html">Merchandise</a>
+  <a href="Coffee At Home.html">Coffee At Home</a>
+  <a href="Ready to Eat.html">Ready to Eat</a>
+</div>
+
+<div class="bestseller-section">
+  <h2>Bestseller</h2>
+  <p>Everyone's favorite Starbucks put together in a specially curated collection.</p>
+
+  <div class="cards">
+    <div class="card">
+      <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/100501.jpg" alt="Cold coffee">
+      <div class="card-content">
+        <h3>Cold Coffee</h3>
+        <p>Everybody's favourite indulgence. Crafted expertly with premium ingredients.</p>
+        <div class="price">₹ 320.25</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/103515.jpg" alt="Java Chip">
+      <div class="card-content">
+        <h3>Java Chip Frappuccino</h3>
+        <p>Mocha sauce and Frappuccino chips blended with coffee and milk.</p>
+        <div class="price">₹ 346.50</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/112539.jpg" alt="Caffe Americano">
+      <div class="card-content">
+        <h3>Caffe Americano</h3>
+        <p>Rich in flavour, full-bodied espresso with hot water in true Italian style.</p>
+        <div class="price">₹ 252.00</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/100433.jpg" alt="Double Chocolate Chip">
+      <div class="card-content">
+        <h3>Double Chocolate Chip Frappuccino</h3>
+        <p>Rich mocha-flavored sauce meets up with chocolaty chips, milk and ice.</p>
+        <div class="price">₹ 393.75</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0JNMUqdYGk3Z_OevBpN3NmWZVzripJtsPHA&s" alt="Iced Caffè Latte">
+      <div class="card-content">
+        <h3>Iced Caffè Latte</h3>
+        <p>Dark, rich in flavour espresso lies in wait under a smoothed layer of foam.</p>
+        <div class="price"> ₹ 194.25</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://cdn.uengage.io/uploads/18085/image-4828-1717843562.png" alt="Picco Cappuccino">
+      <div class="card-content">
+        <h3>Picco Cappuccino</h3>
+        <p>Smooth espresso, milk and ice. Simple and classic.</p>
+        <div class="price"> ₹ 250.00</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/105468.jpg" alt="Cappuccino">
+      <div class="card-content">
+        <h3>Cappuccino</h3>
+        <p>Dark, rich in flavour espresso lies in wait under a smoothed layer of foam.</p>
+        <div class="price">₹ 225.75</div>
+        <button class="add-to-cart">Add Item</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add this new quote section -->
+<div class="quote-section">
+  <p class="quote-text">"It's not just coffee. It's Starbucks. A blend of care, connection, and community in every cup."</p>
+</div>
+
+<!-- Cart Panel -->
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <span class="back-btn" id="backBtn">&#8592;</span>
+    <h2>Your Cart</h2>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="empty-cart">Your cart is empty</div>
+  </div>
+  <div class="cart-total">
+    <span>Total:</span>
+    <span id="cartTotalAmount">₹ 0.00</span>
+  </div>
+   <a href="Payment.html">
+  <button class="checkout-btn">Proceed to Checkout</button></a>
+</div>
+
+<script>
+  const cart = [];
+  const cartIcon = document.querySelector(".cart-icon");
+  const cartCount = document.querySelector(".cart-count");
+  const cartPanel = document.getElementById("cartPanel");
+  const cartItemsContainer = document.getElementById("cartItems");
+  const cartTotalAmount = document.getElementById("cartTotalAmount");
+  const backBtn = document.getElementById("backBtn");
+  const overlay = document.getElementById("overlay");
+  const successMessage = document.getElementById("successMessage");
+
+  // Open cart
+  cartIcon.addEventListener("click", () => {
+    cartPanel.classList.add("active");
+    overlay.classList.add("active");
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when cart is open
+  });
+
+  // Close cart with back button
+  backBtn.addEventListener("click", () => {
+    cartPanel.classList.remove("active");
+    overlay.classList.remove("active");
+    document.body.style.overflow = ''; // Re-enable scrolling
+  });
+
+  // Close cart when clicking on overlay
+  overlay.addEventListener("click", () => {
+    cartPanel.classList.remove("active");
+    overlay.classList.remove("active");
+    document.body.style.overflow = ''; // Re-enable scrolling
+  });
+
+  // Add to cart
+  document.querySelectorAll(".add-to-cart").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const card = e.target.closest(".card");
+      const itemName = card.querySelector("h3").textContent;
+      const itemPrice = parseFloat(card.querySelector(".price").textContent.replace('₹ ', '').replace(',', ''));
+      const itemImage = card.querySelector("img").src;
+      
+      // Check if item already exists in cart
+      const existingItemIndex = cart.findIndex(item => item.name === itemName);
+      
+      if (existingItemIndex !== -1) {
+        // If exists, increase quantity
+        cart[existingItemIndex].quantity += 1;
+      } else {
+        // If new, add to cart with quantity 1
+        cart.push({ 
+          name: itemName, 
+          price: itemPrice,
+          image: itemImage,
+          quantity: 1
+        });
+      }
+      
+      updateCart();
+      
+      // Show success message instead of opening cart
+      showSuccessMessage();
+    });
+  });
+
+  // Show success message when item is added
+  function showSuccessMessage() {
+    successMessage.classList.add('show');
+    
+    // Remove the pop animation class if it exists
+    cartCount.classList.remove('pop');
+    // Trigger reflow to restart animation
+    void cartCount.offsetWidth;
+    // Add the pop animation class
+    cartCount.classList.add('pop');
+    
+    // Hide the message after 2 seconds
+    setTimeout(() => {
+      successMessage.classList.remove('show');
+    }, 2000);
+  }
+
+  // Update cart
+  function updateCart() {
+    cartItemsContainer.innerHTML = "";
+    let total = 0;
+    
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = '<div class="empty-cart">Your cart is empty</div>';
+      cartTotalAmount.textContent = '₹ 0.00';
+      cartCount.textContent = '0';
+      return;
+    }
+    
+    cart.forEach((item, i) => {
+      const itemTotal = item.price * item.quantity;
+      total += itemTotal;
+      
+      const div = document.createElement("div");
+      div.classList.add("cart-item");
+      div.innerHTML = `
+        <img src="${item.image}" alt="${item.name}">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">₹ ${item.price.toFixed(2)} × ${item.quantity}</div>
+          <div class="cart-item-total">₹ ${itemTotal.toFixed(2)}</div>
+        </div>
+        <div class="cart-item-controls">
+          <div class="quantity-controls">
+            <button class="quantity-btn minus" data-index="${i}">-</button>
+            <span>${item.quantity}</span>
+            <button class="quantity-btn plus" data-index="${i}">+</button>
+          </div>
+          <button class="remove-btn" data-index="${i}">✕</button>
+        </div>
+      `;
+      cartItemsContainer.appendChild(div);
+    });
+    
+    // Update cart count and total
+    cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartTotalAmount.textContent = `₹ ${total.toFixed(2)}`;
+
+    // Add event listeners to quantity buttons
+    document.querySelectorAll('.quantity-btn.plus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = e.target.getAttribute("data-index");
+        cart[idx].quantity += 1;
+        updateCart();
+      });
+    });
+    
+    document.querySelectorAll('.quantity-btn.minus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = e.target.getAttribute("data-index");
+        if (cart[idx].quantity > 1) {
+          cart[idx].quantity -= 1;
+        } else {
+          cart.splice(idx, 1);
+        }
+        updateCart();
+      });
+    });
+
+    // Add event listeners to remove buttons
+    document.querySelectorAll(".remove-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const idx = e.target.getAttribute("data-index");
+        cart.splice(idx, 1);
+        updateCart();
+      });
+    });
+  }
+  
+  // Close alert when clicking on close button
+  document.querySelector(".alert-close").addEventListener("click", function() {
+    this.closest(".alert").style.display = "none";
+  });
+  
+  // Toggle between Dine-In and Takeaway
+  document.querySelectorAll(".toggle button").forEach(button => {
+    button.addEventListener("click", function() {
+      document.querySelector(".toggle button.active").classList.remove("active");
+      this.classList.add("active");
+    });
+  });
+
+
+
+
+  // Function to save cart to localStorage
+function saveCartToStorage() {
+  try {
+    localStorage.setItem('starbucksCart', JSON.stringify(cart));
+    return true;
+  } catch (e) {
+    console.error('Error saving cart to localStorage:', e);
+    return false;
+  }
+}
+
+// Function to get cart from localStorage
+function getCartFromStorage() {
+  try {
+    return JSON.parse(localStorage.getItem('starbucksCart')) || [];
+  } catch (e) {
+    console.error('Error reading cart from localStorage:', e);
+    return [];
+  }
+}
+
+// Modify the checkout button functionality
+document.querySelector('.checkout-btn').addEventListener('click', function(e) {
+  // Check if cart is empty
+  if (cart.length === 0) {
+    e.preventDefault(); // Prevent navigation
+    alert('Your cart is empty!');
+    return;
+  }
+  
+  // Save cart to localStorage before navigating
+  if (!saveCartToStorage()) {
+    e.preventDefault();
+    alert('Error saving cart data. Please try again.');
+    return;
+  }
+  
+  // Allow navigation to proceed
+  // The href on the anchor tag will handle the rest
+});
+
+// Also update the add-to-cart functionality to include more item details
+document.querySelectorAll(".add-to-cart").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    const itemName = card.querySelector("h3").textContent;
+    const itemPrice = parseFloat(card.querySelector(".price").textContent.replace('₹ ', '').replace(',', ''));
+    const itemImage = card.querySelector("img").src;
+    const itemDescription = card.querySelector("p") ? card.querySelector("p").textContent : '';
+    
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(item => item.name === itemName);
+    
+    if (existingItemIndex !== -1) {
+      // If exists, increase quantity
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      // If new, add to cart with quantity 1
+      cart.push({ 
+        name: itemName, 
+        price: itemPrice,
+        image: itemImage,
+        description: itemDescription,
+        quantity: 1
+      });
+    }
+    
+    updateCart();
+    showSuccessMessage();
+  });
+});
+
+
+
+
+
+
+
+</script>  
+</body>
+</html> 

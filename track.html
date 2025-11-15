@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Order - Starbucks</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f4f4f4 0%, #e8f5e8 100%);
+      color: #1e3932;
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Background decorative elements */
+    .bg-coffee-beans {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 300px;
+      opacity: 0.05;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,20 A30,30 0 1,1 50,80 A30,30 0 1,1 50,20 Z" fill="%231e3932"/></svg>');
+      background-repeat: repeat;
+      z-index: -1;
+    }
+    
+    .bg-leaf-pattern {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 400px;
+      height: 400px;
+      opacity: 0.03;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,10 C70,10 90,30 90,50 C90,70 70,90 50,90 C30,90 10,70 10,50 C10,30 30,10 50,10 Z" fill="%2300704a"/></svg>');
+      background-repeat: repeat;
+      z-index: -1;
+    }
+    
+    .bg-gradient-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 80%, rgba(0, 112, 74, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(30, 57, 50, 0.1) 0%, transparent 50%);
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #1e3932 0%, #2a5045 100%);
+      padding: 15px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(30, 57, 50, 0.2);
+      border-radius: 0 0 12px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+    
+    .logo {
+      height: 50px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .tracking-card {
+      background: linear-gradient(to bottom, white 0%, #f8faf8 100%);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 30px rgba(30, 57, 50, 0.15);
+      text-align: center;
+      margin: 40px auto;
+      border: 1px solid rgba(0, 112, 74, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tracking-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, #00704a, #1e3932, #00704a);
+    }
+    
+    h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+      color: #1e3932;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #1e3932, #00704a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .order-info {
+      background: linear-gradient(to bottom, #f8faf8 0%, #e8f5e8 100%);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 30px 0;
+      text-align: left;
+      border: 1px solid rgba(0, 112, 74, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .order-info h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(0, 112, 74, 0.2);
+      color: #1e3932;
+      display: flex;
+      align-items: center;
+    }
+    
+    .order-info h2::before {
+      content: '📋';
+      margin-right: 10px;
+      font-size: 24px;
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(0, 112, 74, 0.1);
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      color: #5a7c74;
+      font-weight: 500;
+    }
+    
+    .detail-value {
+      font-weight: 600;
+      color: #1e3932;
+    }
+    
+    /* Order Status Section - Clean Layout */
+    .order-status-section {
+      background: linear-gradient(to bottom, #f8faf8 0%, #e8f5e8 100%);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 30px 0;
+      border: 1px solid rgba(0, 112, 74, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(0, 112, 74, 0.2);
+    }
+    
+    .status-title {
+      font-size: 20px;
+      color: #1e3932;
+      display: flex;
+      align-items: center;
+    }
+    
+    .status-title::before {
+      content: '🚚';
+      margin-right: 10px;
+      font-size: 24px;
+    }
+    
+    .quicktrack-badge {
+      background: linear-gradient(135deg, #00704a, #1e3932);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .status-item.active {
+      background: linear-gradient(135deg, #00704a, #1e3932);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 112, 74, 0.3);
+    }
+    
+    .status-item.completed {
+      background: rgba(0, 112, 74, 0.1);
+      border-left: 4px solid #00704a;
+    }
+    
+    .status-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 112, 74, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      font-size: 20px;
+      color: #00704a;
+      transition: all 0.3s ease;
+    }
+    
+    .status-item.active .status-icon {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    
+    .status-item.completed .status-icon {
+      background: #00704a;
+      color: white;
+    }
+    
+    .status-details {
+      flex: 1;
+    }
+    
+    .status-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    
+    .status-item.active .status-name {
+      color: white;
+    }
+    
+    .status-time {
+      font-size: 14px;
+      color: #5a7c74;
+    }
+    
+    .status-item.active .status-time {
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .status-item.completed .status-time {
+      color: #00704a;
+      font-weight: 500;
+    }
+    
+    .estimated-delivery {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      border: 2px solid rgba(0, 112, 74, 0.2);
+    }
+    
+    .delivery-title {
+      color: #1e3932;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .delivery-title::before {
+      content: '⏱️';
+      margin-right: 8px;
+    }
+    
+    .delivery-time {
+      font-size: 24px;
+      font-weight: 700;
+      color: #00704a;
+      margin: 10px 0;
+    }
+    
+    .delivery-message {
+      color: #5a7c74;
+      font-size: 14px;
+    }
+    
+    .order-items {
+      margin-top: 20px;
+    }
+    
+    .order-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .order-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .order-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .order-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 15px;
+      border: 2px solid rgba(0, 112, 74, 0.2);
+    }
+    
+    .item-details {
+      flex: 1;
+      text-align: left;
+    }
+    
+    .item-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #1e3932;
+      font-size: 18px;
+    }
+    
+    .item-customization {
+      color: #5a7c74;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .item-price {
+      font-weight: 600;
+      color: #00704a;
+      font-size: 18px;
+    }
+    
+    .empty-cart {
+      text-align: center;
+      padding: 40px 30px;
+      color: #5a7c74;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 8px;
+      border: 2px dashed rgba(0, 112, 74, 0.3);
+    }
+    
+    .empty-cart i {
+      font-size: 64px;
+      margin-bottom: 15px;
+      color: #b8d5c7;
+    }
+    
+    .empty-cart p {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      padding: 14px 30px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #00704a 0%, #1e3932 100%);
+      color: white;
+      border: none;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 112, 74, 0.3);
+      background: linear-gradient(135deg, #1e3932 0%, #00704a 100%);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #1e3932;
+      border: 2px solid #1e3932;
+    }
+    
+    .btn-secondary:hover {
+      background: #f0f7f4;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(30, 57, 50, 0.2);
+    }
+    
+    .store-info {
+      background: linear-gradient(135deg, #f8faf8 0%, #e8f5e8 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+      border: 1px solid rgba(0, 112, 74, 0.1);
+    }
+    
+    .store-info h3 {
+      color: #1e3932;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .store-info h3::before {
+      content: '🏪';
+      margin-right: 8px;
+    }
+    
+    .store-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .store-detail {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .store-detail p {
+      margin-bottom: 8px;
+      color: #5a7c74;
+    }
+    
+    .store-detail strong {
+      color: #1e3932;
+    }
+    
+    .continue-shopping {
+      text-align: center;
+      margin-top: 40px;
+    }
+    
+    .continue-shopping a {
+      color: #1e3932;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 24px;
+      background: white;
+      border-radius: 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .continue-shopping a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      background: #f0f7f4;
+    }
+    
+    .continue-shopping a i {
+      margin-left: 8px;
+      transition: transform 0.2s ease;
+    }
+    
+    .continue-shopping a:hover i {
+      transform: translateX(4px);
+    }
+    
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: #5a7c74;
+      font-size: 14px;
+      margin-top: 40px;
+      border-top: 1px solid rgba(0, 112, 74, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .tracking-card {
+        padding: 25px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+      
+      .bg-coffee-beans, .bg-leaf-pattern {
+        display: none;
+      }
+      
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .status-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      .store-details {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-coffee-beans"></div>
+  <div class="bg-leaf-pattern"></div>
+  <div class="bg-gradient-overlay"></div>
+
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Starbucks_Corporation_Logo_2011.svg/1200px-Starbucks_Corporation_Logo_2011.svg.png" alt="Starbucks Logo" class="logo">
+    <div>
+      <a href="#" style="color: white; text-decoration: none;">Help</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="tracking-card">
+      <h1>Track Your Order</h1>
+      
+      <div class="order-info">
+        <h2>Order Information</h2>
+        
+        <div class="detail-row">
+          <span class="detail-label">Order Number</span>
+          <span class="detail-value" id="order-number">#SB23456789</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Order Date</span>
+          <span class="detail-value" id="order-date"></span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Total Amount</span>
+          <span class="detail-value">₹<span id="order-total">0</span></span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Payment Method</span>
+          <span class="detail-value" id="payment-method">Starbucks Card ending in 7890</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">Delivery/Pickup</span>
+          <span class="detail-value" id="delivery-type">Delivery</span>
+        </div>
+      </div>
+      
+      <!-- Order Status Section -->
+      <div class="order-status-section">
+        <div class="status-header">
+          <div class="status-title">Order Status</div>
+          <div class="quicktrack-badge">QuickTrack | Order Tracking</div>
+        </div>
+        
+        <div class="status-grid">
+          <div class="status-item completed">
+            <div class="status-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="status-details">
+              <div class="status-name">ORDER</div>
+              <div class="status-time">10:15 AM</div>
+            </div>
+          </div>
+          
+          <div class="status-item completed">
+            <div class="status-icon">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="status-details">
+              <div class="status-name">ORDER READY</div>
+              <div class="status-time">10:25 AM</div>
+            </div>
+          </div>
+          
+          <div class="status-item active">
+            <div class="status-icon">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="status-details">
+              <div class="status-name">IN TRANSIT</div>
+              <div class="status-time">Current Status</div>
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-icon">
+              <i class="fas fa-motorcycle"></i>
+            </div>
+            <div class="status-details">
+              <div class="status-name">OUT FOR DELIVERY</div>
+              <div class="status-time">Pending</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="estimated-delivery">
+          <div class="delivery-title">Estimated Delivery Time</div>
+          <div class="delivery-time" id="ready-time">11:15 AM</div>
+          <div class="delivery-message">Your order will be delivered in approximately <strong>25 minutes</strong></div>
+        </div>
+      </div>
+      
+      <div class="store-info">
+        <h3>Store Information</h3>
+        <div class="store-details">
+          <div class="store-detail">
+            <p><strong>Starbucks Reserve</strong></p>
+            <p>123 Coffee Avenue</p>
+            <p>Bangalore, KA 560001</p>
+          </div>
+          <div class="store-detail">
+            <p><strong>Store Hours</strong></p>
+            <p>Monday - Friday: 6:00 AM - 10:00 PM</p>
+            <p>Saturday - Sunday: 7:00 AM - 11:00 PM</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="order-items" id="tracking-items">
+        <!-- Order items will be dynamically inserted here -->
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="window.location.href='Order.html'">
+          <i class="fas fa-receipt" style="margin-right: 8px;"></i> View Order Details
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='Starbucks.html'">
+          <i class="fas fa-home" style="margin-right: 8px;"></i> Back to Home
+        </button>
+      </div>
+    </div>
+    
+    <div class="continue-shopping">
+      <a href="Starbucks.html">
+        Order Again 
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+  
+  <footer>
+    <p>© 2025 Starbucks Coffee Company. All Rights Reserved</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set order date
+      const orderDate = new Date();
+      
+      document.getElementById('order-date').textContent = orderDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      // Set delivery time (25 minutes from now)
+      const deliveryTime = new Date(orderDate.getTime() + 25 * 60000);
+      document.getElementById('ready-time').textContent = deliveryTime.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      });
+      
+      // Try to load order from localStorage
+      const savedOrder = localStorage.getItem('starbucksOrder');
+      const trackingItems = document.getElementById('tracking-items');
+      const orderTotal = document.getElementById('order-total');
+      const orderNumber = document.getElementById('order-number');
+      const paymentMethod = document.getElementById('payment-method');
+      const deliveryType = document.getElementById('delivery-type');
+      
+      let total = 0;
+      
+      if (savedOrder) {
+        // Parse the saved order
+        const order = JSON.parse(savedOrder);
+        
+        // Set order number
+        if (order.orderNumber) {
+          orderNumber.textContent = '#' + order.orderNumber;
+        }
+        
+        // Set payment method
+        if (order.paymentMethod) {
+          paymentMethod.textContent = order.paymentMethod;
+        }
+        
+        // Set delivery type
+        if (order.deliveryType) {
+          deliveryType.textContent = order.deliveryType === 'delivery' ? 'Delivery' : 'Pickup';
+        }
+        
+        // Set total amount
+        if (order.totalAmount) {
+          orderTotal.textContent = order.totalAmount;
+        }
+        
+        // Display order items
+        if (order.items && order.items.length > 0) {
+          order.items.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'order-item';
+            
+            // Calculate item total based on quantity
+            const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price.replace(/[^\d.]/g, ''));
+            const itemTotal = itemPrice * item.quantity;
+            total += itemTotal;
+            
+            // Use the item's image if available, otherwise generate a placeholder
+            const getPlaceholderImage = (productName) => {
+              if (productName.toLowerCase().includes('coffee') || productName.toLowerCase().includes('latte') || 
+                  productName.toLowerCase().includes('espresso') || productName.toLowerCase().includes('cappuccino')) {
+                return 'https://via.placeholder.com/70/8B4513/FFFFFF?text=☕';
+              } else if (productName.toLowerCase().includes('sandwich') || productName.toLowerCase().includes('wrap') || 
+                         productName.toLowerCase().includes('toast')) {
+                return 'https://via.placeholder.com/70/DEB887/000000?text=🥪';
+              } else if (productName.toLowerCase().includes('mug') || productName.toLowerCase().includes('cup')) {
+                return 'https://via.placeholder.com/70/FFD700/000000?text=🍵';
+              } else if (productName.toLowerCase().includes('bean') || productName.toLowerCase().includes('blend')) {
+                return 'https://via.placeholder.com/70/8B4513/FFFFFF?text=🌰';
+              } else {
+                return 'https://via.placeholder.com/70/006241/FFFFFF?text=★';
+              }
+            };
+            
+            const itemImage = item.image || getPlaceholderImage(item.name);
+            
+            itemEl.innerHTML = `
+              <img src="${itemImage}" alt="${item.name}" onerror="this.src='${getPlaceholderImage(item.name)}'">
+              <div class="item-details">
+                <div class="item-name">${item.name}</div>
+                <div class="item-customization">Qty: ${item.quantity}</div>
+                <div class="item-price">₹ ${itemTotal.toFixed(2)}</div>
+              </div>
+            `;
+            trackingItems.appendChild(itemEl);
+          });
+        } else {
+          // Show empty cart message
+          trackingItems.innerHTML = `
+            <div class="empty-cart">
+              <i class="fas fa-shopping-cart"></i>
+              <p>No items in your order</p>
+            </div>
+          `;
+        }
+      } else {
+        // Show empty cart message
+        trackingItems.innerHTML = `
+          <div class="empty-cart">
+            <i class="fas fa-shopping-cart"></i>
+            <p>No items in your order</p>
+          </div>
+        `;
+      }
+      
+      // Simulate order progress updates
+      setTimeout(() => {
+        // Update status to "OUT FOR DELIVERY"
+        document.querySelectorAll('.status-item')[3].classList.add('active');
+        document.querySelectorAll('.status-item')[2].classList.remove('active');
+        document.querySelectorAll('.status-item')[2].classList.add('completed');
+        
+        // Update delivery message
+        document.querySelector('.delivery-message').innerHTML = 
+          'Your order is <strong>out for delivery</strong> and will arrive shortly';
+          
+        // Update delivery time to current time + 5 minutes
+        const newDeliveryTime = new Date(Date.now() + 5 * 60000);
+        document.getElementById('ready-time').textContent = newDeliveryTime.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        });
+      }, 30000); // Change status after 30 seconds
+    });
+  </script>
+</body>
+</html>

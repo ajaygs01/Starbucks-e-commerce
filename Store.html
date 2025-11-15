@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find a Starbucks Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #d4e9e2 0%, #f2f0eb 50%, #d4e9e2 100%);
+            color: #2F2F2F;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(to right, #006341 0%, #008055 100%);
+            padding: 12px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-img {
+            height: 36px;
+            width: auto;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+        }
+        
+        .logo-text {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 0 2px 2px rgba(0,0,0,0.2);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 20px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.3s;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: #d4e9e2;
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #d4e9e2;
+        }
+        
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+        
+        .search-bar {
+            display: flex;
+            margin-left: 15px;
+        }
+        
+        .search-bar input {
+            padding: 7px 12px;
+            border: none;
+            border-radius: 20px 0 0 20px;
+            outline: none;
+            width: 180px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+        
+        .search-bar button {
+            background: #d4e9e2;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-bar button:hover {
+            background: #c0d9d2;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            padding: 12px 0;
+            font-size: 13px;
+            color: #6a6a6a;
+            background: linear-gradient(to right, #f2f0eb 0%, #ffffff 50%, #f2f0eb 100%);
+            margin-bottom: 15px;
+            border-bottom: 1px solid #d4e9e2;
+        }
+        
+        .breadcrumb a {
+            color: #006341;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Main Content - Made more compact */
+        .main-content {
+            padding: 25px 0;
+            text-align: center;
+            flex: 1;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #006341;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .location-box {
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9f8 100%);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            max-width: 520px;
+            margin: 0 auto;
+            border: 1px solid #d4e9e2;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .location-box:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #006341 0%, #008055 50%, #006341 100%);
+        }
+        
+        .location-icon {
+            font-size: 42px;
+            color: #006341;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .location-message {
+            margin-bottom: 18px;
+            font-size: 16px;
+            color: #2F2F2F;
+        }
+        
+        .location-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .location-form input {
+            padding: 12px 15px;
+            border: 2px solid #d4e9e2;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+        
+        .location-form input:focus {
+            border-color: #006341;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 99, 65, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to bottom, #006341 0%, #008055 100%);
+            color: white;
+            box-shadow: 0 3px 5px rgba(0, 99, 65, 0.2);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to bottom, #004d33 0%, #006341 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 7px rgba(0, 99, 65, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to bottom, #d4e9e2 0%, #e8f4ef 100%);
+            color: #2F2F2F;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(to bottom, #c0d9d2 0%, #d4e9e2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 7px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+            border-left: 4px solid #dc3545;
+            font-size: 14px;
+        }
+        
+        /* Map placeholder */
+        .map-placeholder {
+            margin-top: 25px;
+            background: linear-gradient(to right, #d4e9e2 0%, #e8f4ef 50%, #d4e9e2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+            border: 1px solid #c0d9d2;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .map-placeholder h3 {
+            color: #006341;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(to right, #006341 0%, #008055 100%);
+            padding: 30px 0 15px;
+            margin-top: 40px;
+            text-align: center;
+            color: white;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .footer-section {
+            flex: 1;
+            min-width: 180px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .footer-section h3 {
+            color: #d4e9e2;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section ul li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: #d4e9e2;
+        }
+        
+        .copyright {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .location-box {
+                padding: 20px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .search-bar {
+                display: none;
+            }
+            
+            .logo-text {
+                display: none;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+        
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .footer-section {
+                min-width: 100%;
+            }
+        }
+        
+        /* Store results */
+        .store-results {
+            display: none;
+            margin-top: 25px;
+            text-align: left;
+        }
+        
+        .store-card {
+            background: linear-gradient(to right, #ffffff 0%, #f8f9f8 100%);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #006341;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .store-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.08);
+        }
+        
+        .store-name {
+            font-weight: bold;
+            color: #006341;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .store-address {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .store-distance {
+            color: #d62b1f;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        /* Active store style */
+        .active-store {
+            background: linear-gradient(to right, #e8f4ef 0%, #d4e9e2 100%) !important;
+            border-left: 4px solid #d62b1f !important;
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+        }
+
+        .active-store .store-name {
+            color: #d62b1f;
+        }
+        
+        /* Decorative elements */
+        .coffee-bean {
+            position: absolute;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .bean-1 {
+            top: 10%;
+            left: 5%;
+            font-size: 35px;
+            color: #006341;
+            transform: rotate(30deg);
+        }
+        
+        .bean-2 {
+            bottom: 15%;
+            right: 7%;
+            font-size: 30px;
+            color: #006341;
+            transform: rotate(-20deg);
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .location-box {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Success state */
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #28a745;
+            font-size: 14px;
+        }
+        
+        .store-results h2 {
+            font-size: 20px;
+            color: #006341;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        /* Store hours */
+        .store-hours {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* Store features */
+        .store-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .feature-badge {
+            background: #f1f8f5;
+            color: #006341;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Selected store info */
+        .selected-store-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #c0d9d2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative coffee beans -->
+    <div class="coffee-bean bean-1">
+        <i class="fas fa-coffee"></i>
+    </div>
+    <div class="coffee-bean bean-2">
+        <i class="fas fa-coffee"></i>
+    </div>
+
+    <!-- Header with Navigation -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Starbucks_Corporation_Logo_2011.svg/800px-Starbucks_Corporation_Logo_2011.svg.png" alt="Starbucks Logo" class="logo-img">
+                    <div class="logo-text">STARBUCKS</div>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="Starbucks.html">Home</a></li>
+                    <li><a href="gift.html">Gift</a></li>
+                    <li><a href="Order.html">Order</a></li>
+                    <li><a href="Payment.html">Pay</a></li>
+                    <li><a href="#">Store</a></li>
+                </ul>
+                <div class="search-bar">
+                    <input type="text" placeholder="Looking for something specific?">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="#">Home</a> > Find A Store
+        </div>
+    </div>
+
+    <!-- Main Content - Made more compact -->
+    <div class="container">
+        <div class="main-content">
+            <h1>Find a store near you</h1>
+            
+            <div class="location-box">
+                <div class="location-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                
+                <p class="location-message">Sorry! we can't seem to spot you.</p>
+                <p class="location-message">Please enable your location to find the nearest Starbucks</p>
+                
+                <div class="location-form">
+                    <input type="text" id="location-input" placeholder="Enter your location">
+                    <button class="btn btn-primary" onclick="findStores()">Find Stores</button>
+                    <button class="btn btn-secondary" onclick="useCurrentLocation()">Use Current Location</button>
+                </div>
+                
+                <div class="error-message" id="error-message">
+                    Oh no! We couldn't find any store around the provided location. Please enter a different location to get nearby stores.
+                </div>
+                
+                <div class="success-message" id="success-message">
+                    <i class="fas fa-check-circle"></i> Success! We found stores near you.
+                </div>
+            </div>
+            
+            <div class="store-results" id="store-results">
+                <h2>Nearby Stores</h2>
+                <div class="store-card" data-id="1">
+                    <div class="store-name">Starbucks - Downtown</div>
+                    <div class="store-address">123 Main Street, City Center</div>
+                    <div class="store-distance">0.8 miles away</div>
+                    <div class="store-hours">Open until 9:00 PM</div>
+                    <div class="store-features">
+                        <span class="feature-badge">Drive-thru</span>
+                        <span class="feature-badge">Mobile Order</span>
+                    </div>
+                </div>
+                <div class="store-card" data-id="2">
+                    <div class="store-name">Starbucks - Riverside</div>
+                    <div class="store-address">456 River Road, Riverside</div>
+                    <div class="store-distance">1.2 miles away</div>
+                    <div class="store-hours">Open until 10:00 PM</div>
+                    <div class="store-features">
+                        <span class="feature-badge">Wi-Fi</span>
+                        <span class="feature-badge">Outdoor Seating</span>
+                    </div>
+                </div>
+                <div class="store-card" data-id="3">
+                    <div class="store-name">Starbucks - Oak Mall</div>
+                    <div class="store-address">789 Oak Street, Shopping Mall</div>
+                    <div class="store-distance">1.5 miles away</div>
+                    <div class="store-hours">Open until 9:30 PM</div>
+                    <div class="store-features">
+                        <span class="feature-badge">Mobile Order</span>
+                        <span class="feature-badge">Reserve</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="map-placeholder" id="map-placeholder">
+                <h3><i class="fas fa-map-marked-alt"></i> Map View</h3>
+                <p>Select a store to see details and get directions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About Us</h3>
+                    <ul>
+                        <li><a href="#">Our Company</a></li>
+                        <li><a href="#">Our Coffee</a></li>
+                        <li><a href="#">Stories and News</a></li>
+                        <li><a href="#">Starbucks Archive</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Careers</h3>
+                    <ul>
+                        <li><a href="#">Culture and Values</a></li>
+                        <li><a href="#">Inclusion, Diversity, and Equity</a></li>
+                        <li><a href="#">College Achievement Plan</a></li>
+                        <li><a href="#">Alumni Community</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Social Impact</h3>
+                    <ul>
+                        <li><a href="#">People</a></li>
+                        <li><a href="#">Planet</a></li>
+                        <li><a href="#">Environmental and Social Impact Reporting</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Order and Pickup</h3>
+                    <ul>
+                        <li><a href="#">Order on the App</a></li>
+                        <li><a href="#">Order on the Web</a></li>
+                        <li><a href="#">Delivery</a></li>
+                        <li><a href="#">Order and Pickup Options</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 Starbucks Coffee Company. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Store the currently active store
+        let activeStore = null;
+        
+        function findStores() {
+            const locationInput = document.getElementById('location-input').value;
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            const storeResults = document.getElementById('store-results');
+            const mapPlaceholder = document.getElementById('map-placeholder');
+            
+            if (!locationInput) {
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                storeResults.style.display = 'none';
+                mapPlaceholder.style.display = 'none';
+                errorMessage.textContent = 'Please enter a location to search for nearby stores.';
+            } else {
+                // Simulate searching for stores
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                errorMessage.innerHTML = `Searching for stores near <strong>${locationInput}</strong>...`;
+                
+                // Simulate API call delay
+                setTimeout(() => {
+                    if (locationInput.toLowerCase().includes('new york') || 
+                        locationInput.toLowerCase().includes('london') ||
+                        locationInput.toLowerCase().includes('paris') ||
+                        locationInput.toLowerCase().includes('chicago') ||
+                        locationInput.toLowerCase().includes('current location')) {
+                        errorMessage.style.display = 'none';
+                        successMessage.style.display = 'block';
+                        storeResults.style.display = 'block';
+                        mapPlaceholder.style.display = 'block';
+                        
+                        // Add click event listeners to store cards
+                        setupStoreInteractions();
+                    } else {
+                        errorMessage.style.display = 'block';
+                        successMessage.style.display = 'none';
+                        errorMessage.innerHTML = `Oh no! We couldn't find any store around <strong>${locationInput}</strong>. Please enter a different location to get nearby stores.`;
+                        storeResults.style.display = 'none';
+                        mapPlaceholder.style.display = 'none';
+                    }
+                }, 1500);
+            }
+        }
+        
+        function useCurrentLocation() {
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            const storeResults = document.getElementById('store-results');
+            const mapPlaceholder = document.getElementById('map-placeholder');
+            
+            if (navigator.geolocation) {
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                errorMessage.textContent = 'Attempting to detect your location...';
+                storeResults.style.display = 'none';
+                mapPlaceholder.style.display = 'none';
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // In a real application, you would use the coordinates to find nearby stores
+                        document.getElementById('location-input').value = 'Current Location';
+                        errorMessage.style.display = 'block';
+                        errorMessage.textContent = 'Searching for nearby stores...';
+                        
+                        // Simulate API call delay
+                        setTimeout(() => {
+                            errorMessage.style.display = 'none';
+                            successMessage.style.display = 'block';
+                            storeResults.style.display = 'block';
+                            mapPlaceholder.style.display = 'block';
+                            
+                            // Add click event listeners to store cards
+                            setupStoreInteractions();
+                        }, 1500);
+                    },
+                    function(error) {
+                        errorMessage.style.display = 'block';
+                        successMessage.style.display = 'none';
+                        errorMessage.textContent = 'Location access denied. Please enter your location manually.';
+                        storeResults.style.display = 'none';
+                        mapPlaceholder.style.display = 'none';
+                    }
+                );
+            } else {
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                errorMessage.textContent = 'Geolocation is not supported by this browser. Please enter your location manually.';
+                storeResults.style.display = 'none';
+                mapPlaceholder.style.display = 'none';
+            }
+        }
+        
+        function setupStoreInteractions() {
+            // Get all store cards
+            const storeCards = document.querySelectorAll('.store-card');
+            
+            // Add click event to each store card
+            storeCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    // Remove active class from previously active store
+                    if (activeStore) {
+                        activeStore.classList.remove('active-store');
+                    }
+                    
+                    // Add active class to clicked store
+                    this.classList.add('active-store');
+                    
+                    // Update the active store reference
+                    activeStore = this;
+                    
+                    // Update the map placeholder to show selected store
+                    const storeName = this.querySelector('.store-name').textContent;
+                    const storeAddress = this.querySelector('.store-address').textContent;
+                    const storeDistance = this.querySelector('.store-distance').textContent;
+                    const storeHours = this.querySelector('.store-hours').textContent;
+                    const storeId = this.getAttribute('data-id');
+                    
+                    const mapPlaceholder = document.getElementById('map-placeholder');
+                    mapPlaceholder.innerHTML = `
+                        <h3><i class="fas fa-map-marked-alt"></i> Selected Store: ${storeName}</h3>
+                        <p>${storeAddress}</p>
+                        <p><strong>${storeDistance}</strong> • ${storeHours}</p>
+                        <div class="selected-store-info">
+                            <p>Store #${storeId} • 555-123-${storeId}${storeId}${storeId}</p>
+                            <div class="store-features">
+                                ${this.querySelector('.store-features').innerHTML}
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="getDirections()">
+                            <i class="fas fa-directions"></i> Get Directions
+                        </button>
+                    `;
+                });
+            });
+        }
+        
+        function getDirections() {
+            if (activeStore) {
+                const storeName = activeStore.querySelector('.store-name').textContent;
+                alert(`Directions to ${storeName} would open in your preferred maps application.`);
+            } else {
+                alert("Please select a store first.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Starbucks Order Page</title>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f9f9f9;
+      padding-top: 71px; /* Added to prevent content from being hidden under fixed header */
+    }
+    
+    .cart-icon {
+      font-size: 22px;
+      cursor: pointer;
+      position: relative;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    
+    .cart-icon:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .cart-count {
+      background: #00754a;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 7px;
+      position: absolute;
+      top: -8px;
+      right: -10px;
+    }
+
+    /* Cart panel - UPDATED TO MATCH BESTSELLER */
+    .cart-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 350px;
+      height: 100vh;
+      background: white;
+      box-shadow: -2px 0 15px rgba(0,0,0,0.2);
+      transition: right 0.3s ease;
+      padding: 20px;
+      z-index: 1000; /* Higher than header */
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .cart-panel.active {
+      right: 0;
+    }
+    
+    .cart-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cart-header h2 {
+      margin: 0;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .back-btn {
+      cursor: pointer;
+      font-size: 20px;
+      margin-right: 10px;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+    
+    .back-btn:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .cart-item img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+    
+    .cart-item-info {
+      flex: 1;
+    }
+    
+    .cart-item-name {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .cart-item-price {
+      color: #00754a;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    
+    .cart-item-total {
+      color: #00754a;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .cart-item-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    
+    .quantity-btn {
+      background: #f1f1f1;
+      border: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .remove-btn {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .cart-total {
+      padding: 15px 0;
+      font-weight: bold;
+      border-top: 2px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      font-size: 18px;
+    }
+    
+    .checkout-btn {
+      background: #00754a;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    
+    .checkout-btn:hover {
+      background: #005a38;
+    }
+    
+    .empty-cart {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+    }
+
+    /* Overlay when cart is open */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999; /* Below cart but above everything else */
+      display: none;
+    }
+    
+    .overlay.active {
+      display: block;
+    }
+    
+    /* Added animation for cart count */
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    
+    .cart-count.pop {
+      animation: pop 0.3s ease;
+    }
+    
+    /* Added success message */
+    .add-to-cart-success {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00754a;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    
+    .add-to-cart-success.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Notification Toast */
+    .notification-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #00754a;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .notification-toast.visible {
+      opacity: 1;
+    }
+    .notification-toast .checkmark {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* --- NAVBAR --- */
+    .navbar {
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 30px;
+      border-bottom: 1px solid #eee;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100; /* Lower than cart panel */
+    }
+    .navbar .logo {
+      height: 50px;
+    }
+    .navbar nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+    }
+    .navbar nav a.active {
+      color: #006241;
+      border-bottom: 2px solid #006241;
+    }
+    .search-user {
+      display: flex;
+      align-items: center;
+    }
+    .search-user input {
+      padding: 8px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+    .user-icon {
+      font-size: 22px;
+    }
+
+    /* --- LOCATION BAR --- */
+    .location-bar {
+      background: #1e3932;
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 20px; /* Added margin to lower the location section */
+    }
+    .location-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    .dine-toggle {
+      display: flex;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .dine-toggle button {
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: bold;
+      background: white;
+      color: #006241;
+    }
+    .dine-toggle button.active {
+      background: #1e3932;
+      color: white;
+    }
+
+    /* --- ALERT --- */
+    .alert-box {
+      margin-top: 15px;
+      background-color: #fce8e6;
+      border-radius: 8px;
+      padding: 16px;
+      color: #b00020;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      max-width: 400px;
+    }
+    .alert-box span {
+      font-weight: normal;
+      color: #333;
+    }
+
+    /* --- MAIN TABS --- */
+    .main-tabs {
+      display: flex;
+      justify-content: space-between; /* Changed to space-between for full width */
+      background-color: #f3f1ec;
+      padding: 16px 40px 0; /* Increased horizontal padding */
+      font-size: 15px;
+      border-bottom: 3px solid #ddd;
+    }
+    .main-tabs .tab {
+      color: #444;
+      padding-bottom: 10px;
+      position: relative;
+      cursor: pointer;
+      white-space: nowrap; /* Prevent text wrapping */
+      flex: 1; /* Added to make tabs take equal space */
+      text-align: center; /* Center text in each tab */
+    }
+    .main-tabs .tab.active {
+      color: #00754a;
+      font-weight: 600;
+    }
+    .main-tabs .tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 100%;
+      background-color: #00754a;
+      border-radius: 2px;
+    }
+
+    /* --- SUB-TABS --- */
+    .sub-tabs {
+      display: flex;
+      width: 100%;  /* span full width */
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+    .sub-tabs .tab {
+      flex: 1;               /* equal space */
+      text-align: center;
+      padding: 14px 0;
+      font-size: 15px;
+      color: #444;
+      cursor: pointer;
+    }
+    .sub-tabs .tab.active {
+      color: #00754a;
+      font-weight: 600;
+      border-bottom: 2px solid #00754a;
+    }
+
+    /* --- FILTERS --- */
+    .filters-container {
+      position: relative;
+    }
+    .filters {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 12px 24px;
+      gap: 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      background-color: #fff;
+    }
+    .filter-icon {
+      font-size: 16px;
+      color: #444;
+      cursor: pointer;
+    }
+    .pill {
+      background-color: #e0e0e0;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      color: #444;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .filters::-webkit-scrollbar {
+      height: 6px;
+    }
+    .filters::-webkit-scrollbar-thumb {
+      background: #006241;
+      border-radius: 10px;
+    }
+
+    /* Scroll Indicator */
+    .scroll-indicator-wrapper {
+      position: relative;
+      height: 6px;
+      background-color: #e0e0e0;
+      margin: 0 24px;
+    }
+    .scroll-indicator {
+      height: 6px;
+      background-color: #00754a;
+      border-radius: 4px;
+      width: 90%;
+      margin-left: 16px;
+    }
+
+    /* --- PRODUCT SECTION --- */
+    .section-title {
+      margin-bottom: 5px;
+      font-size: 22px;
+      font-weight: 600;
+      padding: 20px 40px 0;
+    }
+    .section-description {
+      margin-bottom: 30px;
+      font-size: 15px;
+      color: #555;
+      padding: 0 40px;
+    }
+    .card-container {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      padding: 0 40px 40px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card-header {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    .card-header img {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .card-header-content {
+      flex: 1;
+    }
+    .veg-icon {
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid green;
+      border-radius: 3px;
+      display: inline-block;
+      position: relative;
+      top: 2px;
+      margin-right: 4px;
+    }
+    .veg-icon::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: green;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+    }
+    .item-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .item-subtext {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+    .item-desc {
+      font-size: 14px;
+      color: #333;
+      min-height: 34px;
+    }
+    .price-row {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .price {
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .add-btn {
+      background-color: #00754a;
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s;
+    }
+    .add-btn:hover {
+      background-color: #005a38;
+    }
+    .badge-new {
+      background-color: #e6f4ec;
+      color: #00754a;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    /* --- QUOTATION SECTION --- */
+    .quotation-section {
+      background-color: #00754a; /* Changed to green */
+      padding: 40px;
+      text-align: center;
+      margin: 40px 0;
+      color: white; /* Added white text for better contrast */
+    }
+    .quotation-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .quotation-text {
+      font-size: 24px;
+      font-style: italic;
+      color: white; /* Changed to white */
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .quotation-author {
+      font-size: 18px;
+      color: #f1f8f5; /* Lighter green for author */
+      font-weight: 500;
+    }
+    .coffee-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+      display: block;
+      color: white; /* Changed to white */
+    }
+
+    /* Remove link styling from main tabs */
+    .main-tabs a {
+      text-decoration: none;
+      color: inherit;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay for when cart is open -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Success message -->
+  <div class="add-to-cart-success" id="successMessage">
+    <span>Item added to cart!</span>
+  </div>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <img class="logo" src="https://upload.wikimedia.org/wikipedia/sco/thumb/d/d3/Starbucks_Corporation_Logo_2011.svg/768px-Starbucks_Corporation_Logo_2011.svg.png" alt="Starbucks Logo">
+    <nav>
+      <a href="Starbucks.html">Home</a>
+      <a href="gift.html">Gift</a>
+      <a href="Order.html">Order</a>
+      <a href="Payment.html">Pay</a>
+      <a href="Store.html">Store</a>
+    </nav>
+    <div class="search-user">
+      <input type="text" placeholder="Looking for something specific?">
+      <div class="user-icon">👤</div>
+      <!-- cart icon -->
+      <div class="cart-icon"> 🛒 <span class="cart-count">0</span> </div>
+    </div>
+  </header>
+
+  <!-- LOCATION SECTION -->
+  <section class="location-bar">
+    <div>
+      <div class="location-info">📍 No Store Selected &nbsp;|&nbsp; ⏱ 00 mins</div>
+      <div class="alert-box">
+        <span style="color:#d63c3c;font-weight:700;">No store found!</span>
+        <span>Please enter a different location to find the nearest Starbucks.</span>
+      </div>
+    </div>
+    <div class="dine-toggle">
+      <button class="active">Dine-In</button>
+      <button>Takeaway</button>
+    </div>
+  </section>
+
+  <!-- Main Navigation Tabs -->
+  <div class="main-tabs">
+     <a href="Bestseller.html">
+    <div class="tab">Bestseller</div>
+    </a>
+     <a href="Drinks.html">
+    <div class="tab">Drinks</div>
+    </a>
+     <a href="food.html">
+    <div class="tab">Food</div>
+    </a>
+    <a href="#">
+    <div class="tab active">Merchandise</div>
+    </a>
+     <a href="Coffee At Home.html">
+    <div class="tab">Coffee At Home</div>
+    </a>
+     <a href="Ready to Eat.html">
+    <div class="tab">Ready to Eat</div>
+  </a>
+  </div>
+
+  <!-- Filter Pills -->
+  <div class="filters-container">
+    <div class="filters">
+      <div class="filter-icon">☰</div>
+      <div class="pill">Core Essential</div>
+      <div class="pill">Seasonal Collection</div>
+      <div class="pill">Been There Series</div>
+      <div class="pill">Ceramic</div>
+      <div class="pill">Stainless Steel</div>
+      <div class="pill">Reusable Cups</div>
+      <div class="pill">Coasters</div>
+      <div class="pill">Cup Clips</div>
+    </div>
+    <div class="scroll-indicator-wrapper">
+      <div class="scroll-indicator"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Mugs</div>
+  <div class="section-description">
+    Artistic collection of ceramic mugs with acacia wood lids.
+  </div>
+
+  <div class="card-container">
+    <!-- Card 1 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/109511.jpg" alt="India Been There Ceramic Cup (414 Ml)">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">India Been There Ceramic Cup (414 Ml)</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Inspired by beautiful Indian cities, enjoy your daily coffee..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 750.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/109512.jpg" alt="Mumbai Been There Ceramic Cup (414 Ml)">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Mumbai Been There Ceramic Cup (414 Ml)</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Inspired by beautiful Indian city Mumbai, enjoy your daily c..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 750.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116391.png" alt="MUG HOLIDAY CIRCUS 473 ML">
+        <div class="card-header-content">
+          <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG HOLIDAY CIRCUS 473 ML</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Sip your beverages this holiday with our festive mugs, tumbl..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 2000.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+    
+    <!-- Card 4 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/115557.jpg" alt="Mug 14 Oz Wordmark In">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Mug 14 Oz Wordmark In</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Enjoy your hot or cold beverages with our signature Starbuck..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 800.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/111151.jpg" alt="Matte Black Siren Ceramic Mug (444 Ml)">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">Matte Black Siren Ceramic Mug (444 Ml)</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">A matte black texture mug along with the iconic siren logo t..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 1000.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+     <!-- Card 6 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116533.png" alt="8 OZ Dark Pink Otter Mug">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">8 OZ Dark Pink Otter Mug</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Celebrate valentines with 'made for each otter' collection</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 1600.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 7 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116074.png" alt="MUG HOLIDAY CARNIVAL TREE 295 ML">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG HOLIDAY CARNIVAL TREE 295 ML</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Sip your beverages this holiday with our festive mugs, tumbl..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 2800.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 8 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116075.png" alt="MUG CARNIVAL NIGHT 414 ML">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG CARNIVAL NIGHT 414 ML</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Sip your beverages this holiday with our festive mugs, tumbl..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 2300.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 9 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116599.png" alt="MUG CHENNAI BTS 414ML">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG CHENNAI BTS 414ML</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Inspired by the beautiful city of Chennai, enjoy your daily ..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 1750.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 10 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116490.png" alt="MUG 14OZ CERAMIC FLORAL">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG 14OZ CERAMIC FLORAL</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Celebrate valentines with a cute floral swirl mug</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 2600.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+
+    <!-- Card 11 -->
+    <div class="card">
+      <div class="card-header">
+        <img src="https://starbucksstatic.cognizantorderserv.com/Items/Small/116600.png" alt="MUG AHMEDABAD BTS 414ML">
+        <div class="card-header-content">
+            <div class="badge-new">New Launch</div>
+          <div><span class="veg-icon"></span><span class="item-name">MUG AHMEDABAD BTS 414ML</span></div>
+          <div class="item-subtext"></div>
+          <div class="item-desc">Inspired by the beautiful city of Ahmedabad, enjoy your dail..</div>
+        </div>
+      </div>
+      <div class="price-row">
+        <div class="price">₹ 1050.00</div>
+        <button class="add-btn">Add Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quotation Section -->
+  <section class="quotation-section">
+    <div class="quotation-container">
+      <span class="coffee-icon">☕</span>
+      <p class="quotation-text">"A good cup of coffee from a beautiful mug is like a warm hug for the soul. It's not just about the beverage, but the experience, the moment of peace, and the joy that comes from something crafted with care."</p>
+      <p class="quotation-author">- Starbucks Coffee Philosophy</p>
+    </div>
+  </section>
+
+  <!-- Cart Panel - UPDATED TO MATCH BESTSELLER -->
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-header">
+      <span class="back-btn" id="backBtn">&#8592;</span>
+      <h2>Your Cart</h2>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <div class="empty-cart">Your cart is empty</div>
+    </div>
+    <div class="cart-total">
+      <span>Total:</span>
+      <span id="cartTotalAmount">₹ 0.00</span>
+    </div>
+     <a href="Payment.html">
+    <button class="checkout-btn">Proceed to Checkout</button></a>
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="notification-toast" id="notificationToast">
+    <div class="checkmark">✓</div>
+    <div id="notificationMessage">Item added to cart!</div>
+  </div>
+
+  <script>
+    const cart = [];
+    const cartIcon = document.querySelector(".cart-icon");
+    const cartCount = document.querySelector(".cart-count");
+    const cartPanel = document.getElementById("cartPanel");
+    const cartItemsContainer = document.getElementById("cartItems");
+    const cartTotalAmount = document.getElementById("cartTotalAmount");
+    const backBtn = document.getElementById("backBtn");
+    const overlay = document.getElementById("overlay");
+    const successMessage = document.getElementById("successMessage");
+    const notificationToast = document.getElementById("notificationToast");
+    const notificationMessage = document.getElementById("notificationMessage");
+
+    // Open cart
+    cartIcon.addEventListener("click", () => {
+      cartPanel.classList.add("active");
+      overlay.classList.add("active");
+      document.body.style.overflow = 'hidden'; // Prevent scrolling when cart is open
+    });
+
+    // Close cart with back button
+    backBtn.addEventListener("click", () => {
+      cartPanel.classList.remove("active");
+      overlay.classList.remove("active");
+      document.body.style.overflow = ''; // Re-enable scrolling
+    });
+
+    // Close cart when clicking on overlay
+    overlay.addEventListener("click", () => {
+      cartPanel.classList.remove("active");
+      overlay.classList.remove("active");
+      document.body.style.overflow = ''; // Re-enable scrolling
+    });
+
+    // Show success message when item is added
+    function showSuccessMessage() {
+      successMessage.classList.add('show');
+      
+      // Remove the pop animation class if it exists
+      cartCount.classList.remove('pop');
+      // Trigger reflow to restart animation
+      void cartCount.offsetWidth;
+      // Add the pop animation class
+      cartCount.classList.add('pop');
+      
+      // Hide the message after 2 seconds
+      setTimeout(() => {
+        successMessage.classList.remove('show');
+      }, 2000);
+    }
+
+    // Function to show notification
+    function showNotification(message) {
+      notificationMessage.textContent = message;
+      notificationToast.classList.add("visible");
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        notificationToast.classList.remove("visible");
+      }, 3000);
+    }
+
+    // Add to cart functionality
+    document.querySelectorAll(".add-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const card = e.target.closest(".card");
+        const itemName = card.querySelector(".item-name").textContent;
+        const itemPrice = parseFloat(card.querySelector(".price").textContent.replace('₹ ', '').trim());
+        const itemImg = card.querySelector("img").src;
+        
+        // Check if item already exists in cart
+        const existingItemIndex = cart.findIndex(item => item.name === itemName);
+        
+        if (existingItemIndex !== -1) {
+          // If item exists, increase quantity
+          cart[existingItemIndex].quantity += 1;
+          showNotification(`Increased quantity of ${itemName}`);
+        } else {
+          // If item doesn't exist, add new item
+          cart.push({ 
+            name: itemName, 
+            price: itemPrice,
+            image: itemImg,
+            quantity: 1
+          });
+          showNotification(`${itemName} added to cart!`);
+        }
+        
+        showSuccessMessage();
+        updateCart();
+      });
+    });
+
+    // Update cart
+    function updateCart() {
+      cartItemsContainer.innerHTML = "";
+      let total = 0;
+      
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<div class="empty-cart">Your cart is empty</div>';
+        cartTotalAmount.textContent = '₹ 0.00';
+        cartCount.textContent = '0';
+        return;
+      }
+      
+      cart.forEach((item, i) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        const div = document.createElement("div");
+        div.classList.add("cart-item");
+        div.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">₹ ${item.price.toFixed(2)} × ${item.quantity}</div>
+            <div class="cart-item-total">₹ ${itemTotal.toFixed(2)}</div>
+          </div>
+          <div class="cart-item-controls">
+            <div class="quantity-controls">
+              <button class="quantity-btn minus" data-index="${i}">-</button>
+              <span>${item.quantity}</span>
+              <button class="quantity-btn plus" data-index="${i}">+</button>
+            </div>
+            <button class="remove-btn" data-index="${i}">✕</button>
+          </div>
+        `;
+        cartItemsContainer.appendChild(div);
+      });
+      
+      // Update cart count and total
+      cartCount.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+      cartTotalAmount.textContent = `₹ ${total.toFixed(2)}`;
+
+      // Add event listeners to quantity buttons
+      document.querySelectorAll('.quantity-btn.plus').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = e.target.getAttribute("data-index");
+          cart[idx].quantity += 1;
+          updateCart();
+        });
+      });
+      
+      document.querySelectorAll('.quantity-btn.minus').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = e.target.getAttribute("data-index");
+          if (cart[idx].quantity > 1) {
+            cart[idx].quantity -= 1;
+          } else {
+            cart.splice(idx, 1);
+          }
+          updateCart();
+        });
+      });
+
+      // Add event listeners to remove buttons
+      document.querySelectorAll(".remove-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const idx = e.target.getAttribute("data-index");
+          cart.splice(idx, 1);
+          updateCart();
+        });
+      });
+    }
+    
+    // Function to save cart to localStorage
+    function saveCartToStorage() {
+      try {
+        localStorage.setItem('starbucksCart', JSON.stringify(cart));
+        return true;
+      } catch (e) {
+        console.error('Error saving cart to localStorage:', e);
+        return false;
+      }
+    }
+
+    // Function to get cart from localStorage
+    function getCartFromStorage() {
+      try {
+        const savedCart = localStorage.getItem('starbucksCart');
+        return savedCart ? JSON.parse(savedCart) : [];
+      } catch (e) {
+        console.error('Error loading cart from localStorage:', e);
+        return [];
+      }
+    }
+
+    // Initialize cart from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedCart = getCartFromStorage();
+      if (savedCart.length > 0) {
+        cart.push(...savedCart);
+        updateCart();
+      }
+    });
+
+    // Save cart to localStorage before page unload
+    window.addEventListener('beforeunload', () => {
+      saveCartToStorage();
+    });
+
+    // Modify the checkout button functionality
+    document.querySelector('.checkout-btn').addEventListener('click', function(e) {
+      // Check if cart is empty
+      if (cart.length === 0) {
+        e.preventDefault(); // Prevent navigation
+        alert('Your cart is empty!');
+        return;
+      }
+      
+      // Save cart to localStorage before navigating
+      if (!saveCartToStorage()) {
+        e.preventDefault();
+        alert('Error saving cart data. Please try again.');
+        return;
+      }
+      
+      // Allow navigation to proceed
+      // The href on the anchor tag will handle the rest
+    });
+  </script>
+</body>
+</html>
